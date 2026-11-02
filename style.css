@@ -1,0 +1,490 @@
+  /* ============ 设计令牌（Design Tokens）：与 v1 保持同一套品牌色 ============ */
+  :root{
+    --bg:#F7F3EE;            /* 暖米白底 */
+    --surface:#FFFFFF;       /* 卡片白 */
+    --ink:#2B2622;           /* 近黑暖灰，正文（对比度 ≥4.5:1） */
+    --ink-soft:#7C736C;      /* 次级文字 */
+    --line:#EAE2D9;          /* 边框线 */
+    --primary:#E07A98;       /* 品牌玫瑰粉 */
+    --primary-deep:#C75B7E;  /* 玫瑰粉深，用于文字 */
+    --primary-soft:#FCEAF0;  /* 玫瑰粉淡底 */
+    --accent:#EFA45A;        /* 蜜桃橙点缀 */
+    --accent-soft:#FBEFE0;
+    --ok:#3FA66A; --warn:#E0A23B; --info:#5B8BB0;
+    --radius:18px; --radius-sm:12px;
+    --shadow:0 10px 34px rgba(120,90,80,.12);
+    --shadow-sm:0 2px 12px rgba(120,90,80,.08);
+    --maxw:480px;
+
+    /* —— 语义变量：把散落的硬编码颜色收口到这里，切主题只改变量 —— */
+    --on-primary:#2B2622;      /* 主色底上的字色（玫瑰粉配深字才达标） */
+    --tag-bg:#EEEEEE; --tag-ink:#666666;
+    --tag-ok-bg:#E6F4EC; --tag-info-bg:#E8F0F6; --tag-warn-ink:#B9762A;
+    --input-bg:#FCFAF7;
+    --pill-bg:#F4EFE9;
+    --mask:rgba(43,38,34,.45);
+    --corner-bg:rgba(255,255,255,.72);
+
+    /* —— 背景渐变令牌（背景层 .bgfx 专用，共 7 个变量）——
+       把「背景」拆成三层来画：
+         bg-1/2/3  基础渐变（上浅下深，制造纵深）
+         glow-top  顶部主光源（画面最亮的地方）
+         glow-a/b/c 三团彩色光晕（冷暖对冲，避免单色发闷）
+         vignette  四周暗角（把视线收回中间）
+       好处：换主题只改这 7 个值，三层背景一起换。 */
+    --bg-1:#FFFDF9; --bg-2:#F9F2EA; --bg-3:#F2E6DA;
+    --glow-top:rgba(255,231,203,.85);
+    --glow-a:rgba(252,206,222,.62);   /* 玫瑰粉：右下 */
+    --glow-b:rgba(255,235,205,.55);   /* 奶黄：左上 */
+    --glow-c:rgba(226,208,248,.34);   /* 淡紫：冷调压场 */
+    --vignette:rgba(138,106,84,.14);
+
+    --bar-fade:rgba(242,230,218,0);
+    --ph-a:#F4EFE9; --ph-b:#ECE4DA;
+  }
+
+  /* ============================================================
+     主题 2 · 万圣节 Halloween
+     ------------------------------------------------------------
+     思路：**只覆盖 CSS 变量**，所有组件样式（卡片/按钮/标签/弹窗）
+     自动跟随，不写一行重复规则 —— 这就是「设计令牌」的价值。
+     由 <html data-theme="halloween"> 激活，JS 控制（见 THEME 注释）。
+     配色：深夜紫黑底 + 南瓜橙主色 + 幽灵紫点缀。
+     对比度：正文 15:1、次级文字 8:1、主按钮字 10:1，均远超 WCAG AA。
+     ============================================================ */
+  html[data-theme="halloween"]{
+    color-scheme:dark;
+    --bg:#120A1C;            /* 深夜紫黑 */
+    --surface:#1E1230;       /* 卡片深紫 */
+    --ink:#F3E9DC;           /* 米白正文 */
+    --ink-soft:#BCA9CE;      /* 灰紫次级文字 */
+    --line:#3B2554;
+    --primary:#FF7A2F;       /* 南瓜橙 */
+    --primary-deep:#FFB067;  /* 亮橙，深底上当文字用 */
+    --primary-soft:#3A1E33;
+    --accent:#B26BFF;        /* 幽灵紫 */
+    --accent-soft:#2C1B45;
+    --ok:#5FD98A; --warn:#FFC24B; --info:#88B4FF;
+    --shadow:0 12px 40px rgba(0,0,0,.55);
+    --shadow-sm:0 2px 14px rgba(0,0,0,.4);
+    --on-primary:#1A0D25;    /* 橙底配深紫字 */
+    --tag-bg:#2C1B45; --tag-ink:#D6C4E6;
+    --tag-ok-bg:#17331F; --tag-info-bg:#152A45; --tag-warn-ink:#FFB067;
+    --input-bg:#170E24;
+    --pill-bg:#291A3C;
+    --mask:rgba(8,4,14,.72);
+    --corner-bg:rgba(30,18,48,.82);
+
+    /* 背景渐变令牌：紫夜底 + 三色光晕（橙=南瓜火、紫=幽灵、蓝=夜雾）
+       颜色的「冷暖三角」是这版背景不闷的关键：紫打底、橙提亮、蓝降温。
+       v2 调色：三团光晕整体提亮约 30%，更「派对」，暗角放松让颜色透出来。 */
+    --bg-1:#321349;                    /* 顶部：偏亮的紫，接住标题 */
+    --bg-2:#180C29;                    /* 中段：深紫 */
+    --bg-3:#090510;                     /* 底部：近黑，落住底部操作栏 */
+    --glow-top:rgba(172,88,255,.46);   /* 顶部紫光主光源 */
+    --glow-a:rgba(255,128,52,.36);     /* 南瓜橙：右下 */
+    --glow-b:rgba(154,76,244,.48);     /* 幽灵紫：左上 */
+    --glow-c:rgba(44,108,176,.40);     /* 夜雾蓝：左下 */
+
+    --vignette:rgba(4,1,10,.68);
+    --bar-fade:rgba(9,5,16,0);
+    --ph-a:#251637; --ph-b:#1C1029;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  html{background:var(--bg);}          /* 兜底底色：极老浏览器不支持渐变时也不至于白屏 */
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:transparent;            /* 背景交给 .bgfx 层去画（见下） */
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ============================================================
+     背景层 .bgfx —— 三层叠加渐变，解决「纯色太单调」
+     ------------------------------------------------------------
+     【Web 知识点：CSS 多重背景 multiple backgrounds】
+       一个元素可以同时叠 N 层背景，**写在最前面的在最上层**。
+       每一层都可以是 linear-gradient / radial-gradient / 图片。
+       这里把背景拆成 3 个图层，各管一件事：
+
+       ① .bgfx        主光 + 基础渐变
+                      radial 做「顶部打光」，linear 做「上浅下深的纵深」
+       ② .bgfx::before 三团彩色光晕（橙/紫/蓝），40 秒极缓慢漂移
+                      伪元素 ::before 拿来当独立图层，不用额外 div
+       ③ .bgfx::after  暗角 + 噪点
+                      radial 把四角压暗（视线回到中间）；
+                      SVG 噪点平铺，消除大面积渐变的「塑料感」
+
+     【Web 知识点：position:fixed + z-index:-1】
+       用 fixed 铺满视口、再用负 z-index 沉到内容底下，
+       好处是页面滚动时背景不动（不会跟着内容一起跑），
+       而且 pointer-events:none 保证它绝不吃点击。
+     颜色全部来自 CSS 变量 → 切万圣节主题时背景自动跟着换。
+     ============================================================ */
+  .bgfx{
+    position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;
+    background:
+      /* 层 1：顶部主光源，画面最亮处 */
+      radial-gradient(112% 64% at 50% -16%, var(--glow-top) 0%, transparent 62%),
+      /* 层 2：基础渐变，168° 略倾斜，比纯上下更自然 */
+      linear-gradient(168deg, var(--bg-1) 0%, var(--bg-2) 46%, var(--bg-3) 100%);
+  }
+  /* 彩色光晕层：靠 inset 负值外扩，漂移时不会露出空白边 */
+  .bgfx::before{
+    content:"";position:absolute;inset:-16%;
+    background:
+      radial-gradient(46% 34% at 16% 10%, var(--glow-b) 0%, transparent 70%),  /* 左上：奶黄 / 幽灵紫 */
+      radial-gradient(50% 38% at 88% 84%, var(--glow-a) 0%, transparent 72%),  /* 右下：玫瑰粉 / 南瓜橙 */
+      radial-gradient(44% 36% at 6% 82%, var(--glow-c) 0%, transparent 74%),   /* 左下：淡紫 / 夜雾蓝 */
+      radial-gradient(34% 26% at 96% 34%, var(--glow-c) 0%, transparent 76%);  /* 右侧：同色弱化，补平衡 */
+    animation:bgDrift 40s ease-in-out infinite alternate;
+    will-change:transform;
+  }
+  /* 暗角 + 噪点层：压住四角、加上颗粒质感 */
+  .bgfx::after{
+    content:"";position:absolute;inset:0;
+    background:
+      radial-gradient(118% 86% at 50% 44%, transparent 36%, var(--vignette) 100%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+    background-repeat:no-repeat,repeat;
+    background-size:auto,140px 140px;
+  }
+  /* 右上角的月亮：只在万圣节主题出现（日常主题不装神弄鬼）
+     用 SVG 画 → 矢量，放到多大都不糊；fill 走渐变，边缘靠 mask 挖掉一个圆，
+     就得到「月牙」。定位放在 .bgfx 里（z-index:-1），所以永远在所有卡片后面，
+     不会挡字、不会挡按钮。 */
+  .moon{
+    /* 放在视口右上角、故意超出边界一点点：像月亮刚从画外升起来，比完整圆月更有故事感。
+       尺寸随视口放大（手机上 88px，桌面上最大 176px），手机端不会被挤成一团。 */
+    position:absolute;top:-16px;right:-12px;z-index:1;
+    /* z-index:1 → 压在暗角层（::after）之上，否则 68% 的暗角会把月亮糊掉 */
+    width:clamp(88px,15vw,176px);height:clamp(88px,15vw,176px);
+    display:none;
+    filter:drop-shadow(0 0 22px rgba(255,186,120,.5));   /* 月光外溢 */
+  }
+  html[data-theme="halloween"] .moon{display:block}
+  /* 极缓慢的月晕呼吸：4~6 秒一次，只动光晕亮度，不动月牙本身 */
+  html[data-theme="halloween"] .moon{
+    animation:moonHalo 7s ease-in-out infinite;
+  }
+  @keyframes moonHalo{
+    0%,100%{filter:drop-shadow(0 0 18px rgba(255,186,120,.42));}
+    50%    {filter:drop-shadow(0 0 34px rgba(255,196,130,.72));}
+  }
+
+  /* 极缓慢的呼吸漂移：位移 ±2% 以内，肉眼只觉得「背景是活的」 */
+  @keyframes bgDrift{
+    0%  {transform:translate3d(0,0,0) scale(1);}
+    50% {transform:translate3d(1.8%,-1.4%,0) scale(1.05);}
+    100%{transform:translate3d(-1.4%,1.6%,0) scale(1.02);}
+  }
+  .page{max-width:var(--maxw);margin:0 auto;min-height:100%;padding:18px 16px 120px;}
+
+  /* ============ 顶部品牌 + 语言开关 ============ */
+  /* z-index: 让页头压在装饰层（蛛网/蜘蛛）之上，按钮不被纹理盖住 */
+  .brand{display:flex;align-items:center;gap:10px;padding:6px 4px 14px;
+    position:relative;z-index:5;}
+  .brand__logo{
+    width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:24px;
+    background:linear-gradient(135deg,var(--primary),var(--accent));box-shadow:var(--shadow-sm);
+    flex:0 0 auto;
+  }
+  .brand__text{flex:1 1 auto;min-width:0;}
+  .brand__text h1{font-size:20px;font-weight:800;letter-spacing:.5px;display:flex;align-items:center;gap:6px;}
+  .brand__text p{font-size:12.5px;color:var(--ink-soft);}
+  .ver{
+    font-size:10.5px;font-weight:700;letter-spacing:.5px;color:var(--primary-deep);
+    background:var(--primary-soft);border-radius:999px;padding:1px 7px;
+  }
+  /* 语言切换：小胶囊，40×22，点击切换 中/EN */
+  .lang{
+    flex:0 0 auto;width:44px;height:26px;border-radius:999px;border:1px solid var(--line);
+    background:var(--surface);color:var(--primary-deep);font-size:12px;font-weight:700;
+    cursor:pointer;transition:.18s;display:grid;place-items:center;line-height:1;
+  }
+  .lang:hover{border-color:var(--primary);background:var(--primary-soft);}
+
+  /* ============ 视图切换 Tab（百分比切割：49% + 49% + 2% 间隙） ============ */
+  .tabs{
+    display:grid;grid-template-columns:49% 49%;gap:2%;background:var(--surface);
+    border:1px solid var(--line);border-radius:14px;padding:5px;box-shadow:var(--shadow-sm);
+    position:sticky;top:8px;z-index:5;
+  }
+  .tab{border:0;background:transparent;color:var(--ink-soft);font-size:14px;font-weight:600;
+    padding:9px 4px;border-radius:10px;cursor:pointer;transition:.2s;width:100%;}
+  .tab.active{background:var(--primary-soft);color:var(--primary-deep);}
+
+  /* ============ 卡片 / 分区 ============ */
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px;margin-top:14px;box-shadow:var(--shadow-sm);}
+  .card__head{display:flex;align-items:center;justify-content:space-between;}
+  .card__title{font-size:15.5px;font-weight:700;margin-bottom:4px;}
+  .card__hint{font-size:12.5px;color:var(--ink-soft);margin-bottom:10px;}
+
+  /* ============ 步骤指示（三个等分：100% / 3） ============ */
+  .steps{list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:2%;margin-top:14px;}
+  .step{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12.5px;
+    color:var(--ink-soft);background:var(--surface);border:1px solid var(--line);
+    border-radius:999px;padding:8px 6px;}
+  .step span{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:12px;
+    background:var(--line);color:#fff;flex:0 0 auto;}
+  .step.done span{background:var(--primary);}
+  .step.done{color:var(--primary-deep);border-color:var(--primary-soft);}
+
+  /* ============ 选择胶囊 Chip ============ */
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);
+    font-size:13.5px;padding:9px 14px;border-radius:999px;cursor:pointer;transition:.18s;min-height:40px;}
+  .chip:hover{border-color:var(--primary);}
+  .chip.on{background:var(--primary-soft);border-color:var(--primary);color:var(--primary-deep);font-weight:700;}
+  .link{border:0;background:transparent;color:var(--primary-deep);font-size:13px;cursor:pointer;font-weight:600;}
+
+  /* ============ 按钮 ============ */
+  .btn{border:0;border-radius:14px;font-size:15px;font-weight:700;padding:14px 18px;cursor:pointer;
+    transition:.18s;min-height:48px;}
+  .btn--primary{background:var(--primary);color:var(--on-primary);box-shadow:var(--shadow-sm);}
+  .btn--primary:active{transform:translateY(1px);}
+  .btn--primary:disabled{opacity:.6;cursor:wait;}
+  .btn--ghost{background:var(--surface);color:var(--ink-soft);border:1px solid var(--line);}
+
+  /* ============ 百分比切割法：两按钮一行 = 48% + 48% + 4% 间隙 ============ */
+  .btn-row{display:grid;grid-template-columns:48% 48%;gap:4%;}
+  .btn-row .btn{width:100%;}
+
+  /* 底部固定操作栏：36%（次要）+ 60%（主要）+ 4% 间隙 */
+  .action-bar{
+    position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:36% 60%;gap:4%;
+    padding:12px 16px 16px;background:linear-gradient(180deg,var(--bar-fade),var(--bg-3) 30%);
+    max-width:var(--maxw);margin:0 auto;z-index:6;
+  }
+  .action-bar .btn{width:100%;}
+
+  /* ============ 清单表格（百分比列宽：24+29+25+16 = 94%，加 3 个 2% 间隙正好 100%） ============ */
+  .table{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:6px;}
+  .tr{display:grid;grid-template-columns:24% 29% 25% 16%;gap:2%;padding:11px 12px;font-size:13.5px;
+    border-top:1px solid var(--line);align-items:center;}
+  .tr:first-child{border-top:0;}
+  .tr--head{background:var(--primary-soft);font-weight:700;color:var(--primary-deep);}
+  .strong{font-weight:700;}
+  .tag{font-style:normal;font-size:11.5px;padding:2px 8px;border-radius:999px;background:var(--tag-bg);color:var(--tag-ink);
+    white-space:nowrap;display:inline-block;}
+  .tag--warning{background:var(--accent-soft);color:var(--tag-warn-ink);}
+  .tag--success{background:var(--tag-ok-bg);color:var(--ok);}
+  .tag--info{background:var(--tag-info-bg);color:var(--info);}
+
+  /* ============ 弹窗 Modal ============ */
+  .modal{position:fixed;inset:0;background:var(--mask);display:grid;place-items:center;
+    padding:20px;z-index:20;backdrop-filter:blur(2px);}
+  .modal__card{background:var(--surface);border-radius:22px;padding:24px 22px;width:100%;max-width:360px;
+    box-shadow:var(--shadow);position:relative;}
+  .modal__close{position:absolute;top:12px;right:14px;border:0;background:transparent;font-size:24px;
+    line-height:1;color:var(--ink-soft);cursor:pointer;}
+
+  /* 结果卡 */
+  .result__label{font-size:12.5px;color:var(--primary-deep);font-weight:700;letter-spacing:1px;}
+  .result__name{font-size:24px;font-weight:800;margin:2px 0;}
+  .result__canteen{font-size:13px;color:var(--ink-soft);}
+  .result__desc{font-size:14px;margin:10px 0;color:var(--ink);}
+  .result__tags{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
+  .result__dish{font-size:13px;background:var(--accent-soft);color:var(--tag-warn-ink);padding:4px 10px;border-radius:999px;font-weight:600;}
+  .result__dishes{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px;}
+  .pill{font-size:12.5px;background:var(--pill-bg);color:var(--ink);padding:5px 10px;border-radius:999px;}
+  .result__actions{margin-top:16px;}
+
+  /* 添加表单 */
+  .field{display:block;margin-top:12px;font-size:13px;color:var(--ink-soft);}
+  .field span{display:block;margin-bottom:5px;font-weight:600;color:var(--ink);}
+  .field input,.field select{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 12px;
+    font-size:14px;color:var(--ink);background:var(--input-bg);}
+  .field input:focus,.field select:focus{outline:2px solid var(--primary);outline-offset:0;}
+
+  /* 二维码 */
+  .qr__img{width:100%;border-radius:12px;background:#fff;}
+  .qr__fallback{text-align:center;padding:10px 4px;}
+  .qr__placeholder{width:160px;height:160px;margin:0 auto 12px;border-radius:14px;display:grid;place-items:center;
+    background:repeating-linear-gradient(45deg,var(--ph-a),var(--ph-a) 10px,var(--ph-b) 10px,var(--ph-b) 20px);
+    color:var(--ink-soft);font-size:13px;font-weight:700;}
+  .qr__tip{font-size:12px;color:var(--ink-soft);margin-top:6px;}
+
+  /* ============ 关于：左下角小圆点（缩小、半透明、需要时才点） ============ */
+  .corner-btn{
+    position:fixed;left:12px;bottom:92px;width:34px;height:34px;border-radius:50%;
+    border:1px solid var(--line);background:var(--corner-bg);backdrop-filter:blur(4px);
+    color:var(--ink-soft);font-size:14px;font-weight:700;font-style:italic;cursor:pointer;
+    display:grid;place-items:center;opacity:.55;transition:.2s;z-index:10;
+    box-shadow:var(--shadow-sm);padding:0;
+  }
+  .corner-btn:hover,.corner-btn:focus-visible{opacity:1;color:var(--primary-deep);border-color:var(--primary);}
+
+  /* 关于弹窗：比常规弹窗更小更紧凑 */
+  .about-card{max-width:320px;padding:20px 18px;}
+  .about-card h3{font-size:17px;font-weight:800;margin-bottom:2px;}
+  .about-card .about-sub{font-size:12px;color:var(--ink-soft);margin-bottom:12px;}
+  .about-row{display:grid;grid-template-columns:34% 64%;gap:2%;font-size:11.5px;padding:5px 0;
+    border-top:1px dashed var(--line);color:var(--ink-soft);}
+  .about-row:first-of-type{border-top:0;}
+  .about-row b{color:var(--ink);font-weight:700;}
+  .about-new{margin-top:12px;font-size:11.5px;background:var(--primary-soft);color:var(--primary-deep);
+    border-radius:10px;padding:8px 10px;line-height:1.5;}
+
+  /* Toast */
+  .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:var(--bg);
+    font-size:13.5px;padding:10px 18px;border-radius:999px;z-index:30;box-shadow:var(--shadow);}
+
+  /* ============ 星星特效画布（全屏覆盖，不拦截点击） ============ */
+  .fx-canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:40;}
+
+  /* ============ 过渡动画 ============ */
+  .pop-enter-active,.pop-leave-active{transition:transform .22s ease,opacity .22s ease;}
+  .pop-enter-from,.pop-leave-to{opacity:0;transform:scale(.92);}
+  .fade-enter-active,.fade-leave-active{transition:opacity .25s;}
+  .fade-enter-from,.fade-leave-to{opacity:0;}
+  /* ============================================================
+     万圣节装饰层（纯 CSS + SVG，零图片依赖）
+     ------------------------------------------------------------
+     · 默认 display:none，只有 html[data-theme="halloween"] 才出现；
+     · 全部 pointer-events:none，绝不吃点击；
+     · 系统开「减少动效」时飞行物直接隐藏，不做半空静止。
+     ============================================================ */
+  .deco{display:none}
+  html[data-theme="halloween"] .deco{display:block}
+
+  /* 角落蛛网：两个 SVG，右上 + 左下（旋转 180°） */
+  .web{position:fixed;width:128px;height:128px;color:#6A46A0;opacity:.45;
+    pointer-events:none;z-index:1;}
+  .web--tr{top:-10px;right:-10px}
+  .web--bl{bottom:-10px;left:-10px;transform:rotate(180deg)}
+
+  /* 飞舞的蝙蝠：三只，速度/高度/大小/透明度错开，形成层次 */
+  .bats{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden;}
+  .bat{position:absolute;left:0;top:0;line-height:1;font-size:22px;opacity:.8;
+    animation-name:flyAcross;animation-timing-function:linear;animation-iteration-count:infinite;
+    will-change:transform;}
+  .bat--1{top:14%;animation-duration:18s;font-size:24px}
+  .bat--2{top:28%;animation-duration:24s;animation-delay:-7s;font-size:17px;opacity:.55}
+  .bat--3{top:7%;animation-duration:30s;animation-delay:-16s;font-size:30px;opacity:.4}
+  @keyframes flyAcross{
+    0%{transform:translate(-14vw,0) scaleX(-1)}
+    50%{transform:translate(50vw,26px) scaleX(-1)}
+    100%{transform:translate(112vw,-12px) scaleX(-1)}
+  }
+
+  /* 吊着的蜘蛛：挂在宠物头顶上方一点，避开两者的画面冲突 */
+  .spider{position:fixed;right:18px;bottom:208px;font-size:17px;line-height:1;
+    pointer-events:none;z-index:3;opacity:.85;transform-origin:top center;
+    animation:swing 5.5s ease-in-out infinite;}
+  @keyframes swing{
+    0%,100%{transform:rotate(-7deg) translateY(0)}
+    50%{transform:rotate(7deg) translateY(6px)}
+  }
+
+  /* 南瓜灯 logo：橙光呼吸 */
+  html[data-theme="halloween"] .brand__logo{
+    background:radial-gradient(circle at 50% 36%,#FFB067,#E9531A 72%);
+    animation:pumpkinGlow 3.6s ease-in-out infinite;
+  }
+  @keyframes pumpkinGlow{
+    0%,100%{box-shadow:0 0 16px rgba(255,122,47,.45),var(--shadow-sm)}
+    50%{box-shadow:0 0 30px rgba(255,122,47,.8),var(--shadow-sm)}
+  }
+
+  /* 标题：暖橙发光 */
+  html[data-theme="halloween"] .brand__text h1{
+    color:#FFE9D6;text-shadow:0 0 18px rgba(255,122,47,.5);
+  }
+
+  /* 节日小标签：只在万圣节主题出现 */
+  .holiday-tag{display:none;font-size:10.5px;font-weight:700;letter-spacing:.3px;
+    color:#FFD9B8;background:rgba(255,122,47,.16);border:1px solid rgba(255,122,47,.42);
+    border-radius:999px;padding:1px 7px;margin-left:2px;vertical-align:middle;}
+  html[data-theme="halloween"] .holiday-tag{display:inline-block}
+
+  /* 主按钮：橙金渐变 + 光晕脉动 */
+  html[data-theme="halloween"] .btn--primary{
+    background:linear-gradient(135deg,#FF8A3D,#E9531A);
+    box-shadow:0 6px 22px rgba(233,83,26,.42);
+  }
+  html[data-theme="halloween"] .btn--primary:hover{
+    box-shadow:0 8px 30px rgba(233,83,26,.62);
+  }
+
+  /* 卡片：紫色微光边 */
+  html[data-theme="halloween"] .card{
+    border-color:rgba(139,63,217,.32);
+    box-shadow:var(--shadow-sm),inset 0 1px 0 rgba(255,255,255,.045);
+  }
+  /* 选中胶囊：橙色外发光 */
+  html[data-theme="halloween"] .chip.on{
+    box-shadow:0 0 0 1px rgba(255,122,47,.45),0 0 14px rgba(255,122,47,.22);
+  }
+  /* 步骤圆点：深底上换橙 */
+  html[data-theme="halloween"] .step span{background:var(--line);color:var(--ink)}
+  html[data-theme="halloween"] .step.done span{background:var(--primary);color:var(--on-primary)}
+
+  /* 主题切换按钮：与语言胶囊同款，宽度压到 32px 只放图标 */
+  .theme-btn{
+    flex:0 0 auto;width:32px;height:26px;border-radius:999px;padding:0;
+    border:1px solid var(--line);background:var(--surface);color:var(--primary-deep);
+    font-size:14px;line-height:1;cursor:pointer;transition:.18s;
+    display:grid;place-items:center;
+  }
+  .theme-btn:hover{border-color:var(--primary);background:var(--primary-soft)}
+  .theme-btn:active{transform:scale(.94)}
+
+  /* ============================================================================
+     页面小宠物：南瓜灯小幽灵
+     ----------------------------------------------------------------------------
+     【Web 知识点：SVG 矢量图 + CSS 关键帧动画】
+     · 宠物不是图片，是内联 <svg>，所以任何尺寸都不糊，也不用抠图去水印
+     · 悬浮用 @keyframes petFloat 无限循环；点击用 petBounce 播一次
+     · 动画只加在 .pet__float 这一层，气泡 .pet__bubble 不动，否则对话框会跟着上下抖
+     · 位置固定在右下角、底部操作栏上方（操作栏 z-index:6，宠物 z-index:5 不会盖住按钮）
+     ============================================================================ */
+  .pet{
+    /* right 用 max() 兜住两种屏幕：手机上贴边 6px；宽屏时跟着内容列（--maxw）走，
+       否则页面居中后宠物会跑到离内容很远的屏幕最右边 */
+    position:fixed;right:max(6px,calc(50% - var(--maxw) / 2 + 6px));bottom:84px;
+    width:clamp(64px,17vw,84px);z-index:5;
+    cursor:pointer;-webkit-tap-highlight-color:transparent;
+  }
+  .pet__float{animation:petFloat 3.6s ease-in-out infinite;will-change:transform}
+  @keyframes petFloat{
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-6px)}
+  }
+  /* 点击后弹一下：先拉长、再压扁，cubic-bezier 带一点回弹，像果冻 */
+  .pet.poke .pet__float{animation:petBounce .55s cubic-bezier(.34,1.56,.64,1)}
+  @keyframes petBounce{
+    0%{transform:translateY(0) scale(1,1)}
+    35%{transform:translateY(-18px) scale(.94,1.06)}
+    70%{transform:translateY(2px) scale(1.05,.95)}
+    100%{transform:translateY(0) scale(1,1)}
+  }
+  .pet svg{display:block;width:100%;height:auto;filter:drop-shadow(0 8px 16px rgba(0,0,0,.35))}
+
+  /* 台词气泡：用主题变量取色，日常/万圣节都能自动适配 */
+  .pet__bubble{
+    position:absolute;right:78%;bottom:66%;min-width:118px;max-width:min(44vw,180px);
+    background:var(--surface);color:var(--ink);font-size:12.5px;line-height:1.45;font-weight:600;
+    padding:9px 12px;border-radius:14px 14px 4px 14px;
+    border:1px solid var(--line);box-shadow:var(--shadow-sm);
+    pointer-events:none;white-space:normal;
+  }
+  .pet__bubble::after{
+    content:"";position:absolute;right:-5px;bottom:6px;width:10px;height:10px;
+    background:var(--surface);border-radius:2px;transform:rotate(45deg);
+  }
+
+  /* 减少动效：飞行装饰直接隐藏，避免静止在半空 */
+  @media (prefers-reduced-motion:reduce){
+    .bat,.spider{display:none!important}
+    .bgfx::before{animation:none!important}   /* 背景光晕也停止漂移 */
+    html[data-theme="halloween"] .moon{animation:none!important}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important;}
+  }
+  @media (min-width:600px){ .page{padding-top:28px;} }
