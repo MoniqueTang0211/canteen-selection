@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>今天吃什么？｜ 校园食堂推荐</title>
+<!--
+====================================================================================
+  今天吃什么？校园食堂推荐应用
+  ----------------------------------------------------------------------------------
+  文件分工（全部用「经典 script」，不依赖构建工具，双击 index.html 也能跑）：
+    style.css   全部样式与设计令牌（CSS 变量），含响应式与减少动效适配
+    data.js     数据层：19 家餐厅、忌口关键词库、状态映射、中英文字典
+    app.js      逻辑层：5 个纯函数 + Canvas 粒子特效 + Vue 3 应用
+    vendor/     Vue 3 生产版运行时（本地引入，不依赖外网 CDN，断网可用）
+
+  技术点：
+    · Vue 3 Options API：data / computed / methods / mounted、v-model、v-for、v-if
+    · Canvas 2D + requestAnimationFrame：自绘粒子动画，不是 CSS 动画，性能可控
+    · prefers-reduced-motion：系统开启「减少动效」时自动关闭粒子特效（无障碍）
+    · i18n：文案收进字典对象，用 t(key) 取值，换语言只换字典
+    · 布局：Grid 按百分比切分，父容器变宽变窄时子元素等比缩放
+====================================================================================
+-->
+<link rel="stylesheet" href="./style.css">
+<script>
+/* ============================================================
+   首屏防闪（FOUC）：在页面渲染前就把主题属性挂到 <html> 上
+   ------------------------------------------------------------
+   如果等 Vue mounted 才设置，深色主题会先白闪一下再变暗。
+   这里提前同步执行同一套规则，保证第一帧就是正确配色。
+   ============================================================ */
+(function(){
+  try{
+    var v = localStorage.getItem("canteen_v2_theme");
+    var d = new Date(), m = d.getMonth() + 1, day = d.getDate();
+    var holiday = (m === 10 && day >= 20) || (m === 11 && day <= 2);
+    document.documentElement.setAttribute(
+      "data-theme",
+      (v === "halloween" || v === "default") ? v : (holiday ? "halloween" : "default")
+    );
+  }catch(e){
+    document.documentElement.setAttribute("data-theme", "default");
+  }
+})();
+</script>
+</head>
+<body>
+<!-- 背景层：纯装饰，不进 Vue 模板、不吃点击（详见样式表里 .bgfx 的注释）
+     里面的月亮用 SVG mask 挖出月牙；默认 display:none，只有万圣节主题才显示 -->
+<div class="bgfx" aria-hidden="true">
+  <svg class="moon" viewBox="0 0 100 100" focusable="false">
+    <defs>
+      <!-- 月面渐变：从左上偏白到右下暖橙，模拟被照亮的月面 -->
+      <radialGradient id="moonFill" cx="34%" cy="30%" r="78%">
+        <stop offset="0" stop-color="#FFFBF0"/>
+        <stop offset="55%" stop-color="#FFE3B8"/>
+        <stop offset="100%" stop-color="#F5B173"/>
+      </radialGradient>
+      <!-- mask：白色=保留、黑色=挖掉。先铺满黑 → 画一个白圆（圆月）→ 再画一个黑圆咬掉一口 = 月牙 -->
+      <mask id="moonBite" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+        <rect width="100" height="100" fill="#000"/>
+        <circle cx="52" cy="50" r="36" fill="#fff"/>
+        <circle cx="69" cy="39" r="33" fill="#000"/>
+      </mask>
+    </defs>
+    <circle cx="52" cy="50" r="36" fill="url(#moonFill)" mask="url(#moonBite)"/>
+  </svg>
+</div>
+<div id="app" class="page">
+
+  <!-- ============================================================
+       万圣节装饰层（.deco 默认 display:none，只有 html[data-theme="halloween"] 才显示）
+       全部 aria-hidden + pointer-events:none：不干扰读屏、不吃点击
+       ============================================================ -->
+  <div class="deco" aria-hidden="true">
+    <!-- 右上角蛛网（SVG 画，比 emoji 精细） -->
+    <svg class="web web--tr" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round">
+      <path d="M100 0H0M100 0L0 100M100 0V100M100 0L0 46M100 0L46 100"/>
+      <path d="M78 0Q78 22 100 22M56 0Q56 44 100 44M33 0Q33 67 100 67M12 0Q12 88 100 88"/>
+    </svg>
+    <!-- 左下角蛛网：同一个 SVG 旋转 180° -->
+    <svg class="web web--bl" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round">
+      <path d="M100 0H0M100 0L0 100M100 0V100M100 0L0 46M100 0L46 100"/>
+      <path d="M78 0Q78 22 100 22M56 0Q56 44 100 44M33 0Q33 67 100 67M12 0Q12 88 100 88"/>
+    </svg>
+    <!-- 吊在蛛网上的小蜘蛛 -->
+    <span class="spider">🕷️</span>
+    <!-- 三只错开速度的飞蝠 -->
+    <div class="bats">
+      <span class="bat bat--1">🦇</span>
+      <span class="bat bat--2">🦇</span>
+      <span class="bat bat--3">🦇</span>
+    </div>
+  </div>
+
+  <!-- ============ 顶部品牌 + 主题/语言切换 ============ -->
+  <header class="brand">
+    <!-- logo 随主题换图：万圣节是南瓜灯 -->
+    <div class="brand__logo" aria-hidden="true">{{ theme === 'halloween' ? '🎃' : '🍱' }}</div>
+    <div class="brand__text">
+      <h1>
+        {{ t('app.title') }}
+        <span class="ver">v2</span>
+        <span class="holiday-tag">{{ t('theme.tag') }}</span>
+      </h1>
+      <p>{{ t('app.sub') }}</p>
+    </div>
+    <!-- 主题切换：当前节日主题时显示 🎨（点它回日常），否则显示 🎃（点它开万圣节） -->
+    <button class="theme-btn" @click="toggleTheme" :aria-label="t('theme.aria')" :title="t('theme.aria')">
+      {{ theme === 'halloween' ? '🎨' : '🎃' }}
+    </button>
+    <!-- 语言切换：点击在 中文 / English 之间切换 -->
+    <button class="lang" @click="toggleLang" :aria-label="t('lang.aria')" :title="t('lang.aria')">
+      {{ lang === 'zh' ? 'EN' : '中' }}
+    </button>
+  </header>
+
+  <!-- ============ 视图切换：只剩两个 Tab（关于已移出导航） ============ -->
+  <nav class="tabs" role="tablist" :aria-label="t('nav.aria')">
+    <button class="tab" :class="{active:currentView==='recommend'}" @click="currentView='recommend'" role="tab">
+      {{ t('tab.recommend') }}
+    </button>
+    <button class="tab" :class="{active:currentView==='list'}" @click="currentView='list'" role="tab">
+      {{ t('tab.list') }}
+    </button>
+  </nav>
+
+  <!-- ============ 视图1：推荐主流程 ============ -->
+  <main v-show="currentView==='recommend'">
+    <ol class="steps">
+      <li class="step done"><span>1</span>{{ t('step.status') }}</li>
+      <li class="step" :class="{done:selectCanteen.length>0}"><span>2</span>{{ t('step.canteen') }}</li>
+      <li class="step"><span>3</span>{{ t('step.result') }}</li>
+    </ol>
+
+    <!-- 卡片1：身体状态 -->
+    <section class="card">
+      <h2 class="card__title">{{ t('status.title') }}</h2>
+      <p class="card__hint">{{ healthTip }}</p>
+      <div class="chips">
+        <button v-for="k in statusKeys" :key="k" class="chip"
+                :class="{on:selectStatus===k}" @click="selectStatus=k">
+          {{ t('status.' + k) }}
+        </button>
+      </div>
+    </section>
+
+    <!-- 卡片2：食堂选择 -->
+    <section class="card">
+      <div class="card__head">
+        <h2 class="card__title">{{ t('canteen.title') }}</h2>
+        <button class="link" @click="toggleAllCanteen">{{ allCanteenSelected ? t('canteen.clear') : t('canteen.all') }}</button>
+      </div>
+      <div class="chips">
+        <button v-for="c in allCanteen" :key="c" class="chip"
+                :class="{on:selectCanteen.includes(c)}" @click="toggleCanteen(c)">
+          {{ canteenLabel(c) }}
+        </button>
+      </div>
+    </section>
+
+    <!-- 底部固定操作栏（百分比：36% + 60%） -->
+    <div class="action-bar">
+      <button class="btn btn--ghost" @click="openAdd">{{ t('action.add') }}</button>
+      <button class="btn btn--primary" :disabled="loading" @click="pickRecommend">
+        <span v-if="loading">{{ t('action.picking') }}</span>
+        <span v-else>{{ t('action.pick') }}</span>
+      </button>
+    </div>
+  </main>
+
+  <!-- ============ 视图2：餐厅清单 ============ -->
+  <main v-show="currentView==='list'">
+    <section class="card">
+      <h2 class="card__title">{{ t('list.title', {n: shopList.length}) }}</h2>
+      <p class="card__hint">{{ t('list.hint') }}</p>
+      <div class="table">
+        <div class="tr tr--head">
+          <span>{{ t('list.col.canteen') }}</span>
+          <span>{{ t('list.col.shop') }}</span>
+          <span>{{ t('list.col.order') }}</span>
+          <span>{{ t('list.col.action') }}</span>
+        </div>
+        <div class="tr" v-for="s in shopList" :key="s.id || (s.canteen + s.shopName)">
+          <span>{{ canteenLabel(s.canteen) }}</span>
+          <span class="strong">{{ s.shopName }}</span>
+          <span><i class="tag" :class="'tag--' + orderTagType(s.orderType)">{{ orderLabel(s.orderType) }}</i></span>
+          <span><button v-if="s.id" class="link" @click="removeShop(s)">{{ t('list.delete') }}</button></span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ 结果弹窗 ============ -->
+  <transition name="pop">
+    <div v-if="showResult" class="modal" @click.self="showResult=false" role="dialog" aria-modal="true" :aria-label="t('result.label')">
+      <div class="modal__card result">
+        <button class="modal__close" @click="showResult=false" :aria-label="t('common.close')">×</button>
+        <p class="result__label">{{ t('result.label') }}</p>
+        <h3 class="result__name">{{ resultShop.shopName }}</h3>
+        <p class="result__canteen">📍 {{ canteenLabel(resultShop.canteen) }}</p>
+        <p class="result__desc">{{ resultShop.desc }}</p>
+        <div class="result__tags">
+          <i class="tag" :class="'tag--' + orderTagType(resultShop.orderType)">{{ orderLabel(resultShop.orderType) }}</i>
+          <span v-if="recommendDish" class="result__dish">{{ t('result.dish', {d: recommendDish}) }}</span>
+        </div>
+        <div v-if="resultShop.dishes && resultShop.dishes.length" class="result__dishes">
+          <span v-for="d in resultShop.dishes" :key="d" class="pill">{{ d }}</span>
+        </div>
+        <div class="result__actions btn-row">
+          <button class="btn btn--ghost" @click="showQrFor(resultShop)">{{ qrBtnLabel(resultShop) }}</button>
+          <button class="btn btn--primary" @click="pickRecommend">{{ t('result.swap') }}</button>
+        </div>
+      </div>
+    </div>
+  </transition>
+
+  <!-- ============ 添加餐厅弹窗 ============ -->
+  <transition name="pop">
+    <div v-if="showAdd" class="modal" @click.self="showAdd=false" role="dialog" aria-modal="true" :aria-label="t('add.title')">
+      <div class="modal__card">
+        <button class="modal__close" @click="showAdd=false" :aria-label="t('common.close')">×</button>
+        <h3 class="result__name">{{ t('add.title') }}</h3>
+        <label class="field"><span>{{ t('add.name') }}</span>
+          <input v-model.trim="form.shopName" :placeholder="t('add.namePh')"></label>
+        <label class="field"><span>{{ t('add.canteen') }}</span>
+          <input v-model.trim="form.canteen" :placeholder="(allCanteen[0] ? canteenLabel(allCanteen[0]) : t('add.canteenPh'))"></label>
+        <label class="field"><span>{{ t('add.order') }}</span>
+          <select v-model="form.orderType">
+            <option v-for="o in orderOptions" :key="o" :value="o">{{ orderLabel(o) }}</option>
+          </select></label>
+        <label class="field"><span>{{ t('add.dishes') }}</span>
+          <input v-model.trim="form.dishes" :placeholder="t('add.dishesPh')"></label>
+        <label class="field"><span>{{ t('add.desc') }}</span>
+          <input v-model.trim="form.desc" :placeholder="t('add.descPh')"></label>
+        <div class="result__actions btn-row">
+          <button class="btn btn--ghost" @click="showAdd=false">{{ t('add.cancel') }}</button>
+          <button class="btn btn--primary" @click="saveShop">{{ t('add.save') }}</button>
+        </div>
+      </div>
+    </div>
+  </transition>
+
+  <!-- ============ 二维码 / 点餐方式弹窗 ============ -->
+  <transition name="pop">
+    <div v-if="showQr" class="modal" @click.self="showQr=false" role="dialog" aria-modal="true" :aria-label="t('qr.btn')">
+      <div class="modal__card qr">
+        <button class="modal__close" @click="showQr=false" :aria-label="t('common.close')">×</button>
+        <!-- 图片加载失败（如 qr4.jpg 缺失）时自动退回文字图案，不出现破图 -->
+        <img v-if="currentQr && !qrImgError" :src="currentQr" :alt="t('qr.btn')" class="qr__img" @error="qrImgError = true">
+        <div v-else class="qr__fallback">
+          <div class="qr__placeholder">{{ qrNeedImage(qrOrderType) ? qrShopName : orderLabel(qrOrderType) }}</div>
+          <p>{{ t('qr.orderLabel', {o: orderLabel(qrOrderType)}) }}</p>
+          <p class="qr__tip">{{ qrFallbackTip(qrOrderType) }}</p>
+        </div>
+      </div>
+    </div>
+  </transition>
+
+  <!-- ============ 关于弹窗（小、紧凑，从左下角小圆点打开） ============ -->
+  <transition name="pop">
+    <div v-if="showAbout" class="modal" @click.self="showAbout=false" role="dialog" aria-modal="true" :aria-label="t('about.title')">
+      <div class="modal__card about-card">
+        <button class="modal__close" @click="showAbout=false" :aria-label="t('common.close')">×</button>
+        <h3>{{ t('about.title') }}</h3>
+        <p class="about-sub">{{ t('about.intro') }}</p>
+        <div class="about-row"><b>Vue 3</b><span>{{ t('about.vue') }}</span></div>
+        <div class="about-row"><b>JS</b><span>{{ t('about.js') }}</span></div>
+        <div class="about-row"><b>{{ t('about.routerKey') }}</b><span>{{ t('about.router') }}</span></div>
+        <div class="about-row"><b>axios</b><span>{{ t('about.axios') }}</span></div>
+        <div class="about-row"><b>{{ t('about.engKey') }}</b><span>{{ t('about.eng') }}</span></div>
+        <div class="about-row"><b>UI</b><span>{{ t('about.ui') }}</span></div>
+        <p class="about-new">{{ t('about.new') }}</p>
+      </div>
+    </div>
+  </transition>
+
+  <transition name="fade"><div v-if="toast" class="toast">{{ toast }}</div></transition>
+
+  <!-- ============================================================
+       页面小宠物：南瓜灯小幽灵（纯 SVG 矢量，无图片、无水印）
+       右下角悬浮；点一下会弹一下并说一句话。台词来自 I18N 字典，跟随语言切换。
+       role/tabindex/键盘事件：让读屏和键盘用户也能"点"到它（无障碍基线）
+       ============================================================ -->
+  <div class="pet" :class="{ poke: petPoke }" @click="petTap"
+       role="button" tabindex="0"
+       @keydown.enter.prevent="petTap" @keydown.space.prevent="petTap"
+       :aria-label="t('pet.aria')">
+    <div class="pet__float">
+      <!-- 分层顺序：尾巴 → 身体 → 手 → 耳朵 → 兜帽 → 脸 → 五官 → 南瓜帽 -->
+      <svg viewBox="0 0 120 175" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+        <defs>
+          <radialGradient id="pHalo" cx="50%" cy="52%" r="52%">
+            <stop offset="0%" stop-color="#E7C8FF" stop-opacity=".34"/>
+            <stop offset="60%" stop-color="#C08BFF" stop-opacity=".12"/>
+            <stop offset="100%" stop-color="#C08BFF" stop-opacity="0"/>
+          </radialGradient>
+          <linearGradient id="pHood" x1="30%" y1="8%" x2="72%" y2="96%">
+            <stop offset="0%" stop-color="#4C2E72"/>
+            <stop offset="52%" stop-color="#38224F"/>
+            <stop offset="100%" stop-color="#241536"/>
+          </linearGradient>
+          <linearGradient id="pBody" x1="30%" y1="0%" x2="70%" y2="100%">
+            <stop offset="0%" stop-color="#43285F"/>
+            <stop offset="100%" stop-color="#20122F"/>
+          </linearGradient>
+          <radialGradient id="pFace" cx="42%" cy="34%" r="76%">
+            <stop offset="0%" stop-color="#FDF8FF"/>
+            <stop offset="62%" stop-color="#F1E6F7"/>
+            <stop offset="100%" stop-color="#DCCCEC"/>
+          </radialGradient>
+          <linearGradient id="pTail" x1="50%" y1="0%" x2="50%" y2="100%">
+            <stop offset="0%" stop-color="#D8CBE8" stop-opacity=".95"/>
+            <stop offset="100%" stop-color="#EFE7F7" stop-opacity=".18"/>
+          </linearGradient>
+          <radialGradient id="pPump" cx="36%" cy="30%" r="78%">
+            <stop offset="0%" stop-color="#FFB264"/>
+            <stop offset="55%" stop-color="#F58A3C"/>
+            <stop offset="100%" stop-color="#D9601F"/>
+          </radialGradient>
+        </defs>
+
+        <!-- 身后的一圈微光 -->
+        <ellipse cx="60" cy="92" rx="58" ry="80" fill="url(#pHalo)"/>
+
+        <!-- 尾巴：一团雾 + 一道向右的卷 -->
+        <g>
+          <ellipse cx="60" cy="142" rx="14" ry="11" fill="url(#pTail)"/>
+          <path d="M70 147 Q86 145 84 132 Q82 123 74 126" fill="none" stroke="#DCCFEB" stroke-opacity=".8"
+                stroke-width="7" stroke-linecap="round"/>
+        </g>
+
+        <!-- 身体 -->
+        <ellipse cx="60" cy="108" rx="21" ry="26" fill="url(#pBody)"/>
+
+        <!-- 两只小手（胸前，去掉指缝线，避免像爪子） -->
+        <ellipse cx="41" cy="111" rx="7" ry="8.5" fill="#F2E8F8"/>
+        <ellipse cx="79" cy="111" rx="7" ry="8.5" fill="#F2E8F8"/>
+        <path d="M38 108v6M44 108v6" stroke="#D9C7E6" stroke-width="1" stroke-linecap="round"/>
+        <path d="M76 108v6M82 108v6" stroke="#D9C7E6" stroke-width="1" stroke-linecap="round"/>
+
+        <!-- 尖耳朵 -->
+        <path d="M36 57 Q26 47 19 52 Q21 67 34 74 Z" fill="#F0E6F6"/>
+        <path d="M33 58 Q27 52 23 54 Q25 63 32 68 Z" fill="#E2A6BE" opacity=".55"/>
+        <path d="M84 57 Q94 47 101 52 Q99 67 86 74 Z" fill="#F0E6F6"/>
+        <path d="M87 58 Q93 52 97 54 Q95 63 88 68 Z" fill="#E2A6BE" opacity=".55"/>
+
+        <!-- 兜帽 -->
+        <ellipse cx="60" cy="70" rx="34" ry="33" fill="url(#pHood)"/>
+        <path d="M33 60 Q40 42 60 40" fill="none" stroke="#6B4699" stroke-opacity=".45" stroke-width="3" stroke-linecap="round"/>
+
+        <!-- 脸 -->
+        <ellipse cx="60" cy="73" rx="26" ry="25" fill="url(#pFace)"/>
+
+        <!-- 五官：半睁的困倦眼 + 一点腮红 -->
+        <path d="M46 70 Q52 63 58 70 Q52 76 46 70 Z" fill="#3A2A4E"/>
+        <path d="M62 70 Q68 63 74 70 Q68 76 62 70 Z" fill="#3A2A4E"/>
+        <circle cx="49.5" cy="67.6" r="1.5" fill="#FFFFFF" opacity=".9"/>
+        <circle cx="65.5" cy="67.6" r="1.5" fill="#FFFFFF" opacity=".9"/>
+        <path d="M57 80 Q60 83 63 80" fill="none" stroke="#4A3559" stroke-width="1.8" stroke-linecap="round"/>
+        <ellipse cx="44" cy="79" rx="4.6" ry="2.8" fill="#E9A8BF" opacity=".4"/>
+        <ellipse cx="76" cy="79" rx="4.6" ry="2.8" fill="#E9A8BF" opacity=".4"/>
+
+        <!-- 南瓜帽：整体左倾 7° -->
+        <g transform="rotate(-7 60 32)">
+          <path d="M56 16 L56 9 Q56 5.5 60 5.5 Q64 5.5 64 9 L64 16 Z" fill="#7E8F52"/>
+          <ellipse cx="60" cy="33" rx="27" ry="19" fill="url(#pPump)"/>
+          <path d="M45 20 C40 27 40 39 45 46" fill="none" stroke="#C9561C" stroke-opacity=".45" stroke-width="2.2"/>
+          <path d="M75 20 C80 27 80 39 75 46" fill="none" stroke="#C9561C" stroke-opacity=".45" stroke-width="2.2"/>
+          <path d="M60 15.5 L60 50.5" stroke="#C9561C" stroke-opacity=".35" stroke-width="2.2"/>
+          <path d="M48 29 L54 29 L51 24 Z" fill="#4A1E0A"/>
+          <path d="M72 29 L66 29 L69 24 Z" fill="#4A1E0A"/>
+          <path d="M49 38 L53.5 41.5 L58 38 L62.5 41.5 L67 38 L71 41.5" fill="none" stroke="#4A1E0A" stroke-width="2.4"
+                stroke-linecap="round" stroke-linejoin="round"/>
+          <ellipse cx="47" cy="26" rx="7" ry="4.6" fill="#FFFFFF" opacity=".22" transform="rotate(-18 47 26)"/>
+        </g>
+      </svg>
+    </div>
+
+    <!-- 台词气泡：v-if 控制显隐，配合 <transition name="fade"> 淡入淡出 -->
+    <transition name="fade">
+      <div v-if="petShow" class="pet__bubble" role="status">{{ petSaid }}</div>
+    </transition>
+  </div>
+
+  <!-- 左下角「关于」入口：必须放在 #app 内部，否则 Vue 指令不生效 -->
+  <button class="corner-btn" @click="showAbout = true" :aria-label="t('about.title')" :title="t('about.title')">i</button>
+</div>
+
+<!-- Vue 3 本地运行时 → 数据层 → 应用层（顺序不能换） -->
+<script src="./vendor/vue.global.prod.js"></script>
+<script src="./data.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>
